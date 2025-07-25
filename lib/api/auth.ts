@@ -34,3 +34,22 @@ export async function loginUser(data: LoginData): Promise<LoginResponse> {
 
   return response.json();
 }
+
+export async function logoutUser() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  const response = await fetch(`${apiUrl}/auth/logout`, {
+    method: "POST",
+    headers: {
+      Accept: "*/*",
+    },
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Falha ao realizar logout");
+  }
+
+  return response.json();
+}

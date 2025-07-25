@@ -1,11 +1,18 @@
 import { useState } from "react";
-import { loginUser, LoginData, LoginResponse } from "../lib/api/login";
+import {
+  loginUser,
+  logoutUser,
+  LoginData,
+  LoginResponse,
+} from "../lib/api/auth";
 import { useUser } from "@/contexts/UserContext";
+import { useRouter } from "next/navigation";
 
-export function useLogin() {
-  const { setUser } = useUser();
+export function useAuth() {
+  const { user, setUser } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const login = async (data: LoginData) => {
     setIsLoading(true);
@@ -20,6 +27,8 @@ export function useLogin() {
         avatar: response.user.avatar,
       });
 
+      router.push("/");
+
       return response;
     } catch (err: any) {
       setError(err.message || "Erro ao realizar login");
@@ -29,5 +38,21 @@ export function useLogin() {
     }
   };
 
-  return { login, isLoading, error };
+  const logout = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await logoutUser();
+      setUser({ name: "", email: "", avatar: "" });
+
+      router.push("/login");
+    } catch (err: any) {
+      setError(err.message || "Erro ao realizar logout");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { user, login, logout, isLoading, error };
 }

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useLogin } from "@/hooks/use-login";
+import { useAuth } from "@/hooks/use-auth";
 
 const schema = z.object({
   email: z
@@ -30,7 +30,7 @@ export function LoginForm({
     resolver: zodResolver(schema),
   });
 
-  const { login, isLoading, error } = useLogin();
+  const { login, isLoading, error } = useAuth();
 
   const onSubmit = async (data: any) => {
     try {
