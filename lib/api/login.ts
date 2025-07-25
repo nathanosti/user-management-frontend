@@ -5,6 +5,13 @@ export interface LoginData {
 
 export interface LoginResponse {
   message: string;
+  user: {
+    name: string;
+    email: string;
+    avatar: string;
+  };
+  accessToken: string;
+  refreshToken: string;
 }
 
 export async function loginUser(data: LoginData): Promise<LoginResponse> {
@@ -25,5 +32,5 @@ export async function loginUser(data: LoginData): Promise<LoginResponse> {
     throw new Error(error.message || "Falha ao realizar login");
   }
 
-  return response.json(); // Agora o retorno é tipado como LoginResponse
+  return response.json();
 }
