@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import { useState } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -17,14 +17,14 @@ import { TableHeader } from "./header";
 import { TableContent } from "./table-content";
 import { Pagination } from "./pagination";
 
-export function UsersTable() {
-  const [page, setPage] = React.useState(1);
-  const limit = 10;
+import { motion, AnimatePresence } from "framer-motion";
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
-  );
+export function UsersTable() {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const { data, isLoading, isError, isFetching } = useUsers(page, limit);
 
@@ -50,21 +50,38 @@ export function UsersTable() {
   return (
     <div className="w-full space-y-4">
       <TableHeader table={table} page={page} totalPages={totalPages} />
-      <TableContent
-        table={table}
-        isLoading={isLoading}
-        isError={isError}
-        isFetching={isFetching}
-        columnsLength={userColumns.length}
-      />
-      <Pagination
-        page={page}
-        totalItems={totalItems}
-        currentLength={data?.data.length ?? 0}
-        canPreviousPage={canPreviousPage}
-        canNextPage={canNextPage}
-        onPageChange={setPage}
-      />
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={page}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="space-y-4"
+        >
+          <TableContent
+            table={table}
+            isLoading={isLoading}
+            isError={isError}
+            isFetching={isFetching}
+            columnsLength={userColumns.length}
+          />
+          <Pagination
+            page={page}
+            totalItems={totalItems}
+            currentLength={data?.data.length ?? 0}
+            canPreviousPage={canPreviousPage}
+            canNextPage={canNextPage}
+            onPageChange={setPage}
+            limit={limit}
+            onLimitChange={(newLimit) => {
+              setLimit(newLimit);
+              setPage(1);
+            }}
+          />
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

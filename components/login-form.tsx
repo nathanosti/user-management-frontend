@@ -9,6 +9,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "@/hooks/use-auth";
+import { motion } from "framer-motion";
+import { Spinner } from "@/components/ui/spinner";
 
 const schema = z.object({
   email: z
@@ -41,7 +43,13 @@ export function LoginForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className={cn("flex flex-col gap-6", className)}
+      {...props}
+    >
       <Card>
         <CardHeader>
           <CardTitle>Entrar na sua conta</CardTitle>
@@ -49,7 +57,12 @@ export function LoginForm({
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="flex flex-col gap-6">
-              <div className="grid gap-3">
+              <motion.div
+                className="grid gap-3"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
@@ -60,8 +73,14 @@ export function LoginForm({
                 {errors.email && (
                   <p className="text-red-500 text-sm">{errors.email.message}</p>
                 )}
-              </div>
-              <div className="grid gap-3">
+              </motion.div>
+
+              <motion.div
+                className="grid gap-3"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
                 <div className="flex items-center">
                   <Label htmlFor="password">Password</Label>
                 </div>
@@ -75,17 +94,31 @@ export function LoginForm({
                     {errors.password.message}
                   </p>
                 )}
-              </div>
-              <div className="flex flex-col gap-3">
+              </motion.div>
+
+              <motion.div
+                className="flex flex-col gap-3"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Carregando..." : "Login"}
+                  {isLoading ? (
+                    <Spinner size="small" className="text-white" />
+                  ) : (
+                    "Entrar"
+                  )}
                 </Button>
-                {error && <p className="text-red-500 text-sm">{error}</p>}
-              </div>
+                {error && (
+                  <p className="text-red-500 text-sm">
+                    E-mail ou Senha invalido
+                  </p>
+                )}
+              </motion.div>
             </div>
           </form>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }

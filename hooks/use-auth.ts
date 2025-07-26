@@ -7,6 +7,7 @@ import {
 } from "../lib/api/auth";
 import { useUser } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
+import { delay } from "@/lib/utils";
 
 export function useAuth() {
   const { user, setUser } = useUser();
@@ -27,6 +28,7 @@ export function useAuth() {
         avatar: response.user.avatar,
       });
 
+      await delay(1000);
       router.push("/");
 
       return response;
