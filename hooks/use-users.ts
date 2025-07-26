@@ -1,4 +1,4 @@
-import { fetchUsers } from "@/lib/api/users";
+import { fetchUsers, getUserById } from "@/lib/api/users";
 import { useQuery } from "@tanstack/react-query";
 
 export function useUsers(page: number, limit: number) {
@@ -9,5 +9,17 @@ export function useUsers(page: number, limit: number) {
     gcTime: 1000 * 60 * 10,
     refetchOnWindowFocus: false,
     retry: 3,
+  });
+}
+
+export function useUserDetails(userId: string) {
+  return useQuery({
+    queryKey: ["user", userId],
+    queryFn: () => getUserById(userId),
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+    refetchOnWindowFocus: false,
+    retry: 2,
   });
 }

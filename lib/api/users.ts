@@ -62,6 +62,38 @@ export const getUserById = async (id: string): Promise<User> => {
     throw new Error("Erro ao buscar os dados do usuário");
   }
 
+  console.log({ response });
+
   const user: User = await response.json();
   return user;
+};
+
+interface UpdateUserPayload {
+  id: string;
+  data: Partial<Omit<User, "id" | "createdAt" | "updatedAt">>;
+}
+
+export const updateUser = async ({
+  id,
+  data,
+}: UpdateUserPayload): Promise<User> => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  const response = await fetch(`${apiUrl}/users/${id}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "*/*",
+    },
+    credentials: "include",
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Erro ao atualizar usuário");
+  }
+
+  const updatedUser: User = await response.json();
+  return updatedUser;
 };
