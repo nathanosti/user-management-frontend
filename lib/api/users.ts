@@ -46,3 +46,22 @@ export const fetchUsers = async (
     meta: result.meta,
   };
 };
+
+export const getUserById = async (id: string): Promise<User> => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  const response = await fetch(`${apiUrl}/users/${id}`, {
+    method: "GET",
+    headers: {
+      Accept: "*/*",
+    },
+    credentials: "include",
+  });
+
+  if (!response) {
+    throw new Error("Erro ao buscar os dados do usuário");
+  }
+
+  const user: User = await response.json();
+  return user;
+};

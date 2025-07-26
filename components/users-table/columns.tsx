@@ -2,16 +2,24 @@ import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { User } from "@/lib/api/users";
+import Link from "next/link";
 
 export const userColumns: ColumnDef<User>[] = [
   {
     accessorKey: "id",
     header: "ID",
-    cell: ({ row }) => (
-      <span className="text-xs text-muted-foreground break-all">
-        {row.original.id}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const id = row.original.id;
+
+      return (
+        <Link
+          href={`/users/${id}`}
+          className="text-xs text-muted-foreground underline hover:text-primary transition-colors break-all"
+        >
+          {id}
+        </Link>
+      );
+    },
   },
   {
     accessorKey: "name",
