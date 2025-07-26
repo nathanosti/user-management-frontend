@@ -18,9 +18,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
-import { User } from "@/lib/api/users";
-import { updateUser } from "@/lib/api/users";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ArrowLeftIcon } from "@radix-ui/react-icons";
+import { useEffect, useState } from "react";
+import { User, updateUser } from "@/lib/api/users";
+import { Spinner } from "@/components/ui/spinner";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle2 } from "lucide-react";
 
 type UserFormSchema = z.infer<typeof userFormSchema>;
 
@@ -30,11 +34,9 @@ function getUpdatedFields<T extends Record<string, any>>(
 ): Partial<T> {
   return Object.entries(newData).reduce((acc, [key, newValue]) => {
     const oldValue = oldData[key as keyof T];
-
     if (typeof newValue !== "undefined" && newValue !== oldValue) {
       acc[key as keyof T] = newValue;
     }
-
     return acc;
   }, {} as Partial<T>);
 }
@@ -43,7 +45,10 @@ export default function UserDetailPage() {
   const params = useParams();
   const router = useRouter();
   const userId = params.id as string;
-  const { data: user, isLoading, isError } = useUserDetails(userId);
+  const { data: user, isLoading, isError, error } = useUserDetails(userId);
+
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const {
     register,
@@ -65,6 +70,14 @@ export default function UserDetailPage() {
   });
 
   useEffect(() => {
+    const errMessage = (error as any)?.message;
+    if (errMessage === "You can only view your own profile") {
+      setAccessDenied(true);
+      setTimeout(() => router.push("/"), 3000);
+    }
+  }, [error, router]);
+
+  useEffect(() => {
     if (user) {
       setValue("name", user.name);
       setValue("email", user.email);
@@ -79,7 +92,6 @@ export default function UserDetailPage() {
   const onSubmit = async (data: UserFormSchema) => {
     if (!user) return;
 
-    // Converter data para ISO correto
     const isoBirthDate = data.birthDate
       ? new Date(`${data.birthDate}T00:00:00`).toISOString()
       : undefined;
@@ -94,77 +106,119 @@ export default function UserDetailPage() {
     try {
       await updateUser({ id: userId, data: updated });
       router.refresh();
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
       console.error("Erro ao atualizar usuário:", error);
     }
   };
 
-  if (isLoading) return <p>Carregando...</p>;
-  if (isError || !user) return <p>Erro ao carregar usuário.</p>;
+  if (isLoading)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spinner className="w-12 h-12 text-primary" />
+      </div>
+    );
+
+  if (accessDenied) {
+    return (
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0 }}
+          className="max-w-xl mx-auto mt-12 p-4"
+        >
+          <Alert variant="destructive">
+            <AlertTitle>Acesso negado</AlertTitle>
+            <AlertDescription>
+              Você não tem permissão para visualizar este perfil.
+              <br />
+              Redirecionando para a listagem...
+            </AlertDescription>
+          </Alert>
+          <div className="mt-4">
+            <Button variant="secondary" onClick={() => router.push("/")}>
+              <ArrowLeftIcon className="mr-2" />
+              Voltar para lista
+            </Button>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    );
+  }
+
+  if (isError || !user)
+    return (
+      <p className="text-center text-red-500 mt-10">
+        Erro ao carregar usuário.
+      </p>
+    );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <motion.form
+      onSubmit={handleSubmit(onSubmit)}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <div className="max-w-2xl mx-auto p-6">
-        <Card>
+        <Card className="transition-shadow duration-200 hover:shadow-lg">
           <CardHeader>
             <CardTitle>Detalhes do Usuário</CardTitle>
           </CardHeader>
 
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-4">
+            {showSuccess && (
+              <motion.div
+                layout
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <Alert variant="success">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 mr-2" />
+                  <AlertTitle>Sucesso!</AlertTitle>
+                  <AlertDescription>
+                    Dados do usuário atualizados com sucesso.
+                  </AlertDescription>
+                </Alert>
+              </motion.div>
+            )}
+
+            <motion.div layout className="flex items-center gap-4">
               <Avatar className="w-20 h-20">
                 <AvatarImage src={watch("avatar")} />
                 <AvatarFallback>{watch("name")?.[0]}</AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <Label>ID</Label>
-                <span>{userId}</span>
+                <span className="block break-all text-sm">{userId}</span>
               </div>
-            </div>
+            </motion.div>
 
-            <div>
-              <Label>Nome</Label>
-              <Input {...register("name")} />
-              {errors.name && (
-                <p className="text-red-500 text-sm">{errors.name.message}</p>
-              )}
-            </div>
+            {[
+              { label: "Nome", field: "name", type: "text" },
+              { label: "Email", field: "email", type: "email" },
+              { label: "Telefone", field: "phone", type: "tel" },
+              { label: "Data de Nascimento", field: "birthDate", type: "date" },
+              { label: "URL do Avatar", field: "avatar", type: "url" },
+            ].map(({ label, field, type }) => (
+              <motion.div key={field} layout>
+                <Label>{label}</Label>
+                <Input
+                  type={type}
+                  {...register(field as keyof UserFormSchema)}
+                />
+                {errors[field as keyof UserFormSchema] && (
+                  <p className="text-red-500 text-sm">
+                    {errors[field as keyof UserFormSchema]?.message}
+                  </p>
+                )}
+              </motion.div>
+            ))}
 
-            <div>
-              <Label>Email</Label>
-              <Input type="email" {...register("email")} />
-              {errors.email && (
-                <p className="text-red-500 text-sm">{errors.email.message}</p>
-              )}
-            </div>
-
-            <div>
-              <Label>Telefone</Label>
-              <Input type="tel" {...register("phone")} />
-              {errors.phone && (
-                <p className="text-red-500 text-sm">{errors.phone.message}</p>
-              )}
-            </div>
-
-            <div>
-              <Label>Data de Nascimento</Label>
-              <Input type="date" {...register("birthDate")} />
-              {errors.birthDate && (
-                <p className="text-red-500 text-sm">
-                  {errors.birthDate.message}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label>URL do Avatar</Label>
-              <Input type="url" {...register("avatar")} />
-              {errors.avatar && (
-                <p className="text-red-500 text-sm">{errors.avatar.message}</p>
-              )}
-            </div>
-
-            <div>
+            <motion.div layout>
               <Label>Cargo (Role)</Label>
               <select
                 {...register("role")}
@@ -176,33 +230,38 @@ export default function UserDetailPage() {
               {errors.role && (
                 <p className="text-red-500 text-sm">{errors.role.message}</p>
               )}
-            </div>
+            </motion.div>
 
-            <div className="flex items-center gap-2">
+            <motion.div layout className="flex items-center gap-2">
               <Switch
                 checked={watch("isActive")}
                 onCheckedChange={(value) => setValue("isActive", value)}
               />
               <Input type="hidden" {...register("isActive")} />
               <Label>Usuário Ativo</Label>
-            </div>
+            </motion.div>
           </CardContent>
 
-          <CardFooter className="flex justify-end gap-2">
+          <CardFooter className="flex justify-between gap-2">
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               onClick={() => router.back()}
               disabled={isSubmitting}
             >
+              <ArrowLeftIcon className="mr-2" />
               Voltar
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="transition-transform duration-200 hover:scale-105"
+            >
               Salvar
             </Button>
           </CardFooter>
         </Card>
       </div>
-    </form>
+    </motion.form>
   );
 }

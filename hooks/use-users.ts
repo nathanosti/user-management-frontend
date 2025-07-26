@@ -7,7 +7,7 @@ export function useUsers(page: number, limit: number) {
     queryFn: () => fetchUsers(page, limit),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     retry: 3,
   });
 }
@@ -19,7 +19,7 @@ export function useUserDetails(userId: string) {
     enabled: !!userId,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     retry: 2,
   });
 }

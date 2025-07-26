@@ -58,11 +58,18 @@ export const getUserById = async (id: string): Promise<User> => {
     credentials: "include",
   });
 
-  if (!response) {
-    throw new Error("Erro ao buscar os dados do usuário");
-  }
+  if (!response.ok) {
+    const errorBody = await response.json();
+    console.log({ errorBody });
 
-  console.log({ response });
+    if (response.status === 403) {
+      const error = new Error(errorBody.message || "Acesso negado");
+      (error as any).status = 403;
+      throw error;
+    }
+
+    throw new Error(errorBody.message);
+  }
 
   const user: User = await response.json();
   return user;
