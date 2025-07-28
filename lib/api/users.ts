@@ -21,6 +21,17 @@ export interface UsersResponse {
   };
 }
 
+interface CreateUserPayload {
+  name: string;
+  email: string;
+  phone?: string;
+  birthDate?: string;
+  avatar?: string;
+  isActive?: boolean;
+  role?: string;
+  password: string;
+}
+
 export const fetchUsers = async (
   page: number,
   limit: number,
@@ -103,4 +114,44 @@ export const updateUser = async ({
 
   const updatedUser: User = await response.json();
   return updatedUser;
+};
+
+export const createUser = async (data: CreateUserPayload): Promise<User> => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+  const payload = {
+    ...data,
+    birthDate: data.birthDate
+      ? new Date(`${data.birthDate}T00:00:00`).toISOString()
+      : undefined,
+    isActive: data.isActive ?? true,
+    role: data.role ?? "MEMBER",
+  };
+
+  const response = await fetch(`${apiUrl}/users`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "*/*",
+    },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json();
+
+    if (response.status === 400) {
+      throw new Error(errorBody.message || "Dados inválidos.");
+    }
+
+    if (response.status === 409) {
+      throw new Error("E-mail já está em uso.");
+    }
+
+    throw new Error(errorBody.message || "Erro ao criar usuário.");
+  }
+
+  const user: User = await response.json();
+  return user;
 };

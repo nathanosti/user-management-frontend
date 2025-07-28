@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useUserDetails } from "@/hooks/use-users";
@@ -10,11 +9,11 @@ import { z } from "zod";
 import { useEffect, useState } from "react";
 import { updateUser, User } from "@/lib/api/users";
 import { useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-import { UserFormFields } from "./components/UserFormFields";
-import { UserSuccessAlert } from "./components/UserSuccessAlert";
-import { UserAccessDenied } from "./components/UserAccessDenied";
+import { UserFormFields } from "./UserFormFields";
+import { UserSuccessAlert } from "./UserSuccessAlert";
+import { UserAccessDenied } from "./UserAccessDenied";
 
 export type UserFormSchema = z.infer<typeof userFormSchema>;
 
@@ -69,7 +68,7 @@ export function UserForm() {
 
   const getUpdatedFields = <T extends Record<string, any>>(
     oldData: T,
-    newData: Partial<T>
+    newData: Partial<T>,
   ): Partial<T> => {
     return Object.entries(newData).reduce((acc, [key, value]) => {
       const oldValue = oldData[key as keyof T];
@@ -107,27 +106,33 @@ export function UserForm() {
   };
 
   if (accessDenied) return <UserAccessDenied />;
-  if (isLoading) return <p className="text-center p-6" > Carregando usuário...</p>;
-  if (isError || !user) return <p className="text-center p-6 text-red-500" > Erro ao carregar usuário.</p>;
+  if (isLoading)
+    return <p className="text-center p-6">Carregando usuário...</p>;
+  if (isError || !user)
+    return (
+      <p className="text-center p-6 text-red-500">Erro ao carregar usuário.</p>
+    );
 
   return (
     <motion.form
-      onSubmit= { handleSubmit(onSubmit) }
-  initial = {{ opacity: 0, y: 12 }
-}
-animate = {{ opacity: 1, y: 0 }}
-transition = {{ duration: 0.3 }}
+      onSubmit={handleSubmit(onSubmit)}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
     >
-  <UserFormFields
-        userId={ userId }
-watch = { watch }
-register = { register }
-errors = { errors }
-setValue = { setValue }
-isSubmitting = { isSubmitting }
-showSuccess = { showSuccess }
-  />
-  </motion.form>
+      <div className="max-w-2xl mx-auto p-6 space-y-4">
+        <AnimatePresence>{showSuccess && <UserSuccessAlert />}</AnimatePresence>
+
+        <UserFormFields
+          userId={userId}
+          watch={watch}
+          register={register}
+          errors={errors}
+          setValue={setValue}
+          isSubmitting={isSubmitting}
+          showSuccess={showSuccess}
+        />
+      </div>
+    </motion.form>
   );
 }
-

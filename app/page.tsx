@@ -1,6 +1,7 @@
 "use client";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { CreateUserSheet } from "@/components/CreateUserSheet";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -51,6 +52,9 @@ export default function Index() {
           </header>
 
           <div className="flex flex-1 flex-col center items-center gap-4 p-4">
+            <div className="self-end">
+              <CreateUserSheet />
+            </div>
             <UsersTable />
           </div>
         </motion.div>
